@@ -85,3 +85,28 @@ mount /dev/sdb2 /win
 ```
 
 Puis on redemarre la vm. Avec ``lsblk`` on peut vérifier la configuration (car la commande affiche les disques et le lieu ou ils sont montés).
+
+**8)** On commence par chercher la clef USB :
+
+```bash
+sudo fdisk -l
+```
+
+On remarque une nouvelle ligne : sdc1 et sdc2. (celle qui nous interesse est sdc1).
+
+On crée le point de montage :
+
+```bash
+mkdir /media/usb
+```
+
+On a juste ensuite à monter sdc1 au point créé précedemment :
+
+```bash
+sudo mount /dev/sdc1 /media/usb
+```
+
+**9)** Pour crer un dossier partagé (sous vmware) :
+
+On va dans *virtual machine settings*, puis *options*.
+dans l'onglet shared folder, on coche *always enabled* puis on clique sur *add*.
