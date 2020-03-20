@@ -109,4 +109,7 @@ sudo mount /dev/sdc1 /media/usb
 **9)** Pour crer un dossier partagé (sous vmware) :
 
 On va dans *virtual machine settings*, puis *options*.
+
 dans l'onglet shared folder, on coche *always enabled* puis on clique sur *add*.
+
+Et pour le voir dans la vm, il suffit d'aller dans /mnt/hgfs/partage, ou il apparait.
