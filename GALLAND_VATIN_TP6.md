@@ -250,3 +250,94 @@ On termine bien sur avec ``update-grub``.
 
 ## Exercice 3 : Noyau
 
+Il s'agit maintenant de creer et d'installer un module pour le noyau :
+
+**1)** On commence par l'installation du paquet build-essential, contenant tousles outils nécessaires à la compilation de programmes écrits en C (et pas seulement bien sur).
+
+```bash
+sudo apt install build-essential
+```
+
+**2)** On crée (hors de la vm) un fichier hello.c, dont voici le contenu :
+
+```bash
+#include <linux/module.h>
+
+#include <linux/kernel.h>
+
+MODULE_LICENSE("GPL");
+
+MODULE_AUTHOR("John Doe");
+
+MODULE_DESCRIPTION("Module hello world");
+
+MODULE_VERSION("Version 1.00");
+
+int init_module(void)
+
+{
+  
+  printk(KERN_INFO "[Hello world] - La fonction init_module() est appelée.\n");
+
+  return 0;
+
+}
+
+void cleanup_module(void)
+
+{
+
+  printk(KERN_INFO "[Hello world] - La fonction cleanup_module() est appelée.\n");
+
+}
+```
+
+**3)** De même on crée un fichier makefile :
+
+```bash
+obj-m += hello.o
+
+all:
+
+  make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+
+  make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+
+install:
+
+  cp ./hello.ko /lib/modules/$(shell uname -r)/kernel/drivers/misc
+```
+
+Ces deux fichiers sont ensuite transmis à la VM via le dossier partagé précedemment créé.
+
+**4)** On compile le module : ``make``.
+
+On l'istalle avec ``sudo make install``
+
+**5)** Le module est intallé à l'emplacement suivant :
+
+/lib/modules/5.3.0-42-generic/kernel/drivers/misc/hello.ko
+
+On le charge via :
+
+```bash
+sudo insmod /lib/modules/5.3.0-42-generic/kernek/drivers/misc/hello.ko
+
+lsmod | grep "hello" #Montre que le module à bien été lancé
+```
+
+
+
+// A rédiger //
+
+on recherche aussi dans le journal du noyau avec :
+
+cat /var/log/kern.log | grep "init_module". On trouve la ligne demandée.
+
+on décharge le module avec : 
+
+sudo rmmod /lib/modules/5.3.0-42-generic/kernel/drivers/misc/hello.ko
+
+la ligne apparait correctement dans les journaux du kernel.
