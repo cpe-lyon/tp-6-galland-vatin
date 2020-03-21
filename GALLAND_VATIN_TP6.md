@@ -69,9 +69,9 @@ On peut ensuite l'ouvrir : ``sudo nano /etc/fstab``.
 A la suite on rajoute les deux lignes suivantes :
 
 ```bash
-/dev/sdb1 /data ext4 defaults 0 0
+/dev/disk/by-partuuid/by-partuuid_de_la_premiere_partition /data auto defaults 0 0 
 
-/dev/sdb2 /win nfts defaults 0 0
+/dev/disk/by-partuuid/by-partuuid_de_la_deuxieme_partition /win nfts defaults 0 0 
 ```
 
 Il est à noter que les dossiers /data et /win sont à crer nous même avec mkdir...
