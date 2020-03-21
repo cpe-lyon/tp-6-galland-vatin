@@ -113,3 +113,140 @@ On va dans *virtual machine settings*, puis *options*.
 dans l'onglet shared folder, on coche *always enabled* puis on clique sur *add*.
 
 Et pour le voir dans la vm, il suffit d'aller dans /mnt/hgfs/partage, ou il apparait.
+
+## Exercice 2 : Personnalisation de GRUB
+
+GRUB est le chargeur d’amorçage par défaut d’Ubuntu depuis la version 9.10. Il est largement paramètrable, via un fichier de paramètres /etc/default/grub et des sripts situés dans /etc/grub.d
+
+Contenu de /etc/default/grub au début de l'exercice :
+
+```bash
+# If you change this file, run 'update-grub' afterwards to update
+
+# /boot/grub/grub.cfg.
+
+# For full documentation of the options in this file, see:
+
+#   info -f grub -n 'Simple configuration'
+
+GRUB_DEFAULT=0
+
+GRUB_TIMEOUT_STYLE=hidden
+
+GRUB_TIMEOUT=0
+
+GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+
+GRUB_CMDLINE_LINUX_DEFAULT="maybe-ubiquity"
+
+GRUB_CMDLINE_LINUX=""
+
+# Uncomment to enable BadRAM filtering, modify to suit your needs
+
+# This works with Linux (no patch required) and with any kernel that obtains
+
+# the memory map information from GRUB (GNU Mach, kernel of FreeBSD ...)
+
+#GRUB_BADRAM="0x01234567,0xfefefefe,0x89abcdef,0xefefefef"
+
+# Uncomment to disable graphical terminal (grub-pc only)
+
+#GRUB_TERMINAL=console
+
+# The resolution used on graphical terminal
+
+# note that you can use only modes which your graphic card supports via VBE
+
+# you can see them in real GRUB with the command `vbeinfo'
+
+#GRUB_GFXMODE=640x480
+
+# Uncomment if you don't want GRUB to pass "root=UUID=xxx" parameter to Linux
+
+#GRUB_DISABLE_LINUX_UUID=true
+
+# Uncomment to disable generation of recovery mode menu entries
+
+#GRUB_DISABLE_RECOVERY="true"
+
+# Uncomment to get a beep at grub start
+
+#GRUB_INIT_TUNE="480 440 1"
+```
+
+**1)** On commence par regarder si /etc/default/grub.d/50-curtin-settings.cfg est présent présent dans l'environnement. Ce n'est pas le cas. Si il avait été présent, on aurait modifié son extension avec mv.
+
+**2)** On souhaite que le menu de GRUB s'affiche 10 secondes avant de lancer automatiquementle premier OS du menu.
+
+Pour ce faire on modifie en sudo le fichier/etc/default/grub (fichier qui sera toujours modifié en sudo d'ailleurs).
+
+On modifie la ligne ``GRUB_TIMEOUT=0`` en ``GRUB_TIMEOUT=10``.
+
+Il faut aussi faire apparaitre le menu : On décommente la ligne ``grub_timeout_style=hidden``.
+
+**3)** On met à jour en lancant ``update-grub``
+
+**4)** En redémarrant la VM, on obtient bien le résultat escompté : une apparition du menu pendant 10 secondes, avant de lancer le 1er OS.
+
+**5)** On souhaite désormais augmenter la résolution de GRUB et de notre VM.
+
+Pour récupérer la taille, on appuie sur c dans le menu GRUB au lancement de la VM. Il n'y a ensuite plus qu'a modifier dans /etc/default/grub la ligne ``#GRUB_GFXMODE=640x480`` en ``#GRUB_GFXMODE=1024x768x32``.
+
+**6)** On désire installer un fond d'écran : Pour ce faire :
+
+```bash
+sudo apt install grub2-splashimages #installation d'un paquet en proposant plusieurs
+
+sudo update-grub #Pour que GRUB voit les fonds d'écran
+```
+
+Les thèmes disponibles sont stockés dans /usr/share/images/grub. Dans le fichier /etc/default/grub, on ajoute la ligne suivante :
+
+``GRUB_BACKGROUND="/usr/share/images/grub/B-1B_over_the_pacific_ocean.tga"``.
+
+**7)** Il est aussi possible d'installer d'autres thèmes, notament grâce à l'adresse https://www.gnome-look.org/p/1328894/.
+
+**8)** On souhaite ajouter au menu de démarrage deux entrées, pour arréter et redemarrer la machine. Pour ce faire, on ouvre avec nano ou vim /etc/grub.d/40_custom, en mode sudo bien sur.
+
+On y ajoute :
+
+```bash 
+menuentry "Reboot now"{
+
+  reboot
+
+}
+
+menuentry "Shutdown now"{
+
+  halt
+
+}
+```
+
+Ensuite, un simple ``update-grub``, et ca fonctionne.
+
+**9)** Enfin, on souhaite configurer GRUB pour avoir le clavier en francais.
+
+```bash
+sudo mkdir /boot/grub/layouts
+
+sudo grub-kbdcomp -o /boot/grub/layouts/fr.gkb fr
+```
+
+Puis dans /etc/default/grub, on ajoute à la fin ``GRUB_TERMINAL_INPUT="at_keyboard"``.
+
+De même dans /etc/grub.d/40_custom, on ajoute a la fin :
+
+```bash
+# Clavier fr
+
+insmod keylayouts
+
+keymap fr
+```
+
+On termine bien sur avec ``update-grub``.
+
+## Exercice 3 : Noyau
+
