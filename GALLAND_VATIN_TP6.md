@@ -15,14 +15,14 @@ On démarre ensuite la VM.
 ```bash
 ls /dev/ | grep "sd"
 ```
-
-qui va chercher à afficher les fichiers contenant sd dans /dev (donc les disques durs, et la commande 
+Nous voyons chaque disque dur identifié par une lettre : sda et sdb. En plus, les partitions apparaissent avec des numéros : sda1 et sda2. Le disque dur initial est sda. La mention sdb indique qu'un disque dur a été ajouté.
+Cette commande va afficher les fichiers contenant sd dans /dev (donc les disques durs), et la commande 
 
 ```bash
 lsblk
 ```
 
-qui affiche, entre autres, les disques durs.
+qui affiche, tous les périphériques en mode bloc et ,entre autres, les disques durs, de la même manière que précédemment.
 
 Dans les deux cas, on trouve bien, en plus de sda partitionné en 2, le disque sdb de taille 5Go.
 
@@ -46,6 +46,9 @@ On enregistre enfin avec w, qui nous fait quitter fdisk.
 
 On peut au passage vérifier avec ``lsblk`` la bonne création de nos disques (en l'occurence l'un de 1,9 et l'autre de 3,1 Go, soit une probable erreur de calcul de notre part, due sans doute à l'oubli de la prise en compte du début à 2048 et non à 1)
 
+Il aurait été possible d'utiliser l'option +2G pour spécifier directement la taille de manière plus simple.
+Sinon cfdisk permet la même chose mais avec une interface beaucoup plus userfriendly.
+
 **4)** On va désormais formater les partitions : 
 
 ```bash
@@ -58,7 +61,7 @@ sudo mkfs.ext4 -b 4096 /dev/sdb1 # On formate l'autre en ext4 par blocs de 4096
 
 **6)** On va faire en sorte de monter les partitions automatiquement au démarrage, grâce au fichier /etc/fstab.
 
-La première chose à faire consiste à en créer une copie :
+La première chose à faire consiste à en créer une copie (bonne pratique) :
 
 ```bash
 sudo cp /etc/fstab /etc/fstab.bak
@@ -74,7 +77,13 @@ A la suite on rajoute les deux lignes suivantes :
 /dev/disk/by-partuuid/by-partuuid_de_la_deuxieme_partition /win nfts defaults 0 0 
 ```
 
-Il est à noter que les dossiers /data et /win sont à crer nous même avec mkdir...
+Il est à noter que les dossiers /data et /win sont à créer nous même avec mkdir avant cette étape...
+
+On peut ensuite reboot et observer la réussite de la manoeuvre avec mount :
+
+```bash 
+mount | grep "sbd"
+```
 
 **7)** On utilise mount (commande temporaire) pour effectuer le montage :
 
@@ -105,14 +114,20 @@ On a juste ensuite à monter sdc1 au point créé précedemment :
 ```bash
 sudo mount /dev/sdc1 /media/usb
 ```
-
+On pourrait évidemment faire de la même manière que pour sdb mais cela ne présente aucun intérêt.
 **9)** Pour crer un dossier partagé (sous vmware) :
 
 On va dans *virtual machine settings*, puis *options*.
 
-dans l'onglet shared folder, on coche *always enabled* puis on clique sur *add*.
+dans l'onglet shared folder, on coche *always enabled* puis on clique sur *add*. On choisit enfin le chemin sur la machine hôte.
 
-Et pour le voir dans la vm, il suffit d'aller dans /mnt/hgfs/partage, ou il apparait.
+Et pour le voir dans la vm, il suffit d'aller dans /mnt/hgfs/dossier_partagé, ou il apparait.
+S'il n'apparait pas, il suffit de taper les lignes suivantes :
+
+```bash
+sudo mkdir /mnt/hgfs
+sudo /usr/bin/vmhgfs-fuse .host:/ /mnt/hgfs -o subtype=vmhgfs-fuse,allow_other
+```
 
 ## Exercice 2 : Personnalisation de GRUB
 
@@ -174,7 +189,7 @@ GRUB_CMDLINE_LINUX=""
 #GRUB_INIT_TUNE="480 440 1"
 ```
 
-**1)** On commence par regarder si /etc/default/grub.d/50-curtin-settings.cfg est présent présent dans l'environnement. Ce n'est pas le cas. Si il avait été présent, on aurait modifié son extension avec mv.
+**1)** On commence par regarder si /etc/default/grub.d/50-curtin-settings.cfg est présent présent dans l'environnement. Ce n'est pas le cas. Si il avait été présent, on aurait modifié son extension avec la commande mv.
 
 **2)** On souhaite que le menu de GRUB s'affiche 10 secondes avant de lancer automatiquementle premier OS du menu.
 
@@ -190,7 +205,7 @@ Il faut aussi faire apparaitre le menu : On décommente la ligne ``grub_timeout_
 
 **5)** On souhaite désormais augmenter la résolution de GRUB et de notre VM.
 
-Pour récupérer la taille, on appuie sur c dans le menu GRUB au lancement de la VM. Il n'y a ensuite plus qu'a modifier dans /etc/default/grub la ligne ``#GRUB_GFXMODE=640x480`` en ``#GRUB_GFXMODE=1024x768x32``.
+Pour récupérer la taille, on appuie sur c dans le menu GRUB au lancement de la VM pour lancer le terminal grub. Ensuite vbeinfo indique toutes les tailles prises en charge. Il n'y a ensuite plus qu'a modifier dans /etc/default/grub la ligne ``#GRUB_GFXMODE=640x480`` en ``#GRUB_GFXMODE=1024x768x32``.
 
 **6)** On désire installer un fond d'écran : Pour ce faire :
 
@@ -205,6 +220,7 @@ Les thèmes disponibles sont stockés dans /usr/share/images/grub. Dans le fichi
 ``GRUB_BACKGROUND="/usr/share/images/grub/B-1B_over_the_pacific_ocean.tga"``.
 
 **7)** Il est aussi possible d'installer d'autres thèmes, notament grâce à l'adresse https://www.gnome-look.org/p/1328894/.
+Cela présente néanmoins qu'un intérêt très limité pour une machine sans interface graphique puisse avoir un fond d'écran sur GRUB.
 
 **8)** On souhaite ajouter au menu de démarrage deux entrées, pour arréter et redemarrer la machine. Pour ce faire, on ouvre avec nano ou vim /etc/grub.d/40_custom, en mode sudo bien sur.
 
@@ -224,7 +240,8 @@ menuentry "Shutdown now"{
 }
 ```
 
-Ensuite, un simple ``update-grub``, et ca fonctionne.
+Ensuite, un simple ``update-grub``, et ca fonctionne, on peut observer le fonctionnement voulu...
+Les commandes à taper dans le menuentry sont en sythaxe grub car c'est grub et non ubuntu qui les interprète.
 
 **9)** Enfin, on souhaite configurer GRUB pour avoir le clavier en francais.
 
@@ -246,7 +263,7 @@ insmod keylayouts
 keymap fr
 ```
 
-On termine bien sur avec ``update-grub``.
+On termine bien sur avec ``update-grub``. Au redémarage, le clavier sous Grub fonctionne toujours et est passé en Azerty.
 
 ## Exercice 3 : Noyau
 
@@ -377,7 +394,7 @@ Auparavant, on a tapé dans le terminal ``tty``, qui nous à donné l'identifian
 ```
 * * * * ./test.sh > /dev/tty1
 ```
-
+Ce script est donc appelé toutes les minutes dans le terminal.
 **3)** On souhaite maintenant afficher un message à intervalle régulier, en l'occurrence toutes les 3 minutes :
 
 Aprés avoir créé le script contenant la tache à executé, on rentre dans cron la commande :
@@ -412,7 +429,7 @@ Aprés avoir créé le script contenant la tache à executé, on rentre dans cro
 
 * ``chrontab -r`` supprime les rappels pour l'utilisateur qui execute la commande
 
-* ``sudo chrontab -r usr`` supprime pour tout autre usr.
+* ``sudo chrontab -r usr`` supprime pour tout autre usr (nescessite root).
 
 ## Exercice 5 : Surveillance de l'activité du système
 
