@@ -350,7 +350,7 @@ Puis en cherchant dans le journal du noyeau on trouve la phrase "La fonction cle
 
 ## Exercice 4 : Exécution de commandes en différé : at et cron
 
-**1)** On souhaite programmer une tâche affichant un rappel pour une réunion dans 3 minutes :
+**1) 2)** On souhaite programmer une tâche affichant un rappel pour une réunion dans 3 minutes :
 
 ```bash
 at 2.41 PM 
@@ -370,79 +370,95 @@ Ensuite on fait chmod 777, et on teste l'execution en executant le fichier.
 
 Cela étant fait, on ouvre ``crontab -e``, puis avec 2 on spécifie le choix de vim.
 
-Une dernière
+Une dernière chose à faire est que le résultat soit renvoyé sur le terminal actuel...
 
+Auparavant, on a tapé dans le terminal ``tty``, qui nous à donné l'identifiannt du terminal actuel : on a juste à insérer cette valeur dans le programme, en faisant :
 
+```
+* * * * ./test.sh > /dev/tty1
+```
 
+**3)** On souhaite maintenant afficher un message à intervalle régulier, en l'occurrence toutes les 3 minutes :
 
-// A rédiger //
+Aprés avoir créé le script contenant la tache à executé, on rentre dans cron la commande :
 
-
-ex 4
-
-
-
-
-
-http://hardware-libre.fr/2014/03/8-exemples-pour-maitriser-linux-cron/
-https://www.linuxtricks.fr/wiki/cron-et-crontab-le-planificateur-de-taches
-
-problème : comment renvoyer sur le terminal actuel ?
-on a tapé avant tty qui nous donne le terminal actuel et on mets cette valeur dans le programme
-on fait * * * * ./test.sh > /dev/tty1
-
-tache toutes les 3mins ?
+```
 */3 * * * ./tache.sh > /dev/tty
+```
 
-tache tous les 15 mins ?
+**4)** Pour executer une tâche tout les quarts d'heure, il suffit de remplacer ce qui précède par :
 
+```
 */15 * * * ./tache2.sh
+```
 
-taches q5
+**5)** On veut maintenant executer une commande toutes les cinq minutes (en partant de 2), à 18h, uniquement les 1er et 15 de chaque mois :
 
+```
 2/5 18 1,15 * ./tache3.sh > /dev/tty
+```
 
-tache q6
+**6)** On souhaite executer une commande du lundi au vendredi à 17h :
 
-pour ne plus envoyer par mail on ajoute en première ligne : 
-MAILTO=""
-
+```
 00 17 1-5 * ./tache4.sh > /dev/tty
+```
 
-chrontab -r supprime les rappels pour toi, sinon chrontab -r usr supprime pour autre usr, mais nescessite root.
+**7)** Maintenant on veut que les messages ne soient plus envoyés par mail, mais soient redirigées dans un fichier de log dans notre répertoire personnel : Pour ce faire, on ajoute en premiere ligne :
 
-Ex5 htop : tous les programmes en cours en temps réel
-On passe a tty2 avec ctrl alt F2.
-W renvoit les programmes actifs lancés par l'utilisateur.
-au login, la dernière connexion apparait
-sinon, on peut utiliser le log de connexion :
-less /var/log/auth.log
+``MAILTO=""``.
 
-uname -r pour plusieurs infos, uname -r pour juste le noyau
+**8)** On va enfin vider le crontab : Deux solutions s'offrent à nous :
 
+* ``chrontab -r`` supprime les rappels pour l'utilisateur qui execute la commande
+
+* ``sudo chrontab -r usr`` supprime pour tout autre usr.
+
+## Exercice 5 : Surveillance de l'activité du système
+
+Dans la console tty1 (console par défaut) on lance ``htop``, qui affiche en tant réel tout les programmes en cours.
+
+On change ensuite de console (CTRL + ALT + F2) pour passer dans tty2, ou on execute ``w``.
+
+Cette dernière commande renvoie l'ensemble des programmes actifs lancés par l'utilisateur.
+
+pour afficher l'historique des dernières connexions à la machine, on peut soit regarder ce qui s'affiche au login (la dernière connexion apparait à ce moment), soit utiliser le fichier de log de connexion : ``less /var/log/auth.log``.
+
+Pour obtenir des informations, on peut utiliser uname -a (renvoie des informations sur plusieurs choses), ou alors uname -r, qui affichera les informations spéifiques au noyau (et donc ce qu'on veut obtenir, à savoir la version du noyau).
+
+On veut désormais récupérer, au format JSON, toutes les informations sur le processeur : 
+
+```bash
 sudo lshw -C CPU -json
+```
 
-journalctl --list-boots pour afficher les derniers demarages
-pour afficher après le boot, on utilise journalctl en root avec --until et --since. en donnant les dates entre deux boots. sinon, on peut utiliser --boot[=ID] donc par exemple journalctl --boot -0 pour le dernier, -1 pour l'avant dernier etc.
+Pour obtenir la liste des derniers démarrages de la machine avec la commande *journalctl*, on execute ``journalctl --list-boots``.
 
-pour les derniers démarages, on peut faire : journalctl --list-boot | tail -n 5 pour les 5 derniers
+Pour afficher tout ce qu’il s’est passé sur la machine lors de l’avant-dernier boot, on peut cette fois faire ``sudo journalctl --until XXX --since XXX``, en précisant l'intervalle de dates qui nous interesse. Sinon, ``journalctl --boot -1`` affichera spécifiquement les informations liées à l'avant dernier boot.
 
-pour prevenir d'une maintenance, la meilleure solution est de l'écrire directement dans
-/etc/motd
+On souhaite maintenant avoir la liste des derniers démarrages de la machine : il suffit pour cela de lancer la commande ``journalctl --list-boot |tail -n 5`` (pour les 5 derniers démarrages).
 
-sinon dans le /etc/profile
-echo "attention, maintenance de prévue le ..."
+On souhaite désormais informer les utilisateurs d'une future maintenance lors de chaque connexion à la machine. La meilleure solution est d'écrire directemet le message dans /etc/mod, mais on peut aussi ajouter dans /etc/profile ``echo "Message de maintenance"``.
 
-Tload montre l'activité du processeur,donc on devrait voir une grande utilisation puis plus rien quand on interrompt !
+Enfin, on écrit un script bash calculant le k-ième élément de la suite de Fibonacci. On lance ce script pour k = 100, puis depuis un autre terminal on lance ``tload``. Puis on interrompt le calcul (CTRL + C) et on regarde de nouveau l'affichage de tload.
 
-ex6 pas fait
+Comme tload montre l'activité du processeur, on voit d'abord une forte utilisation, puis plus rien à l'interruption du calcul.
 
+## Exercice 6 : Interception de signaux
 
-ex7
+Non traité
 
-tar * compresse que les fichiers non cachés.
-tar . compresse tout le dossier actuel, donc fichiers cachés compris
+## Exercice 7 : Sauvegardes, tar
 
-la commande archive tout notre home ?
+**1)** Dans votre dossier personnel, on crée deux archives de ce dossier : l'une, archive1.tar,
+en indiquant * comme argument, et l'autre, archive2.tar en indiquant . comme argument. 
 
-en s'enlevant les droits en exectution, on a permission denied.En effet, il s'execute dans le dossier, hors il n'a pas les droits ! Il faut donc les droits d'execution sur un dossier pour le compresser.
+En comparant les deux, on remarque que tar avec * ne compresse que les fichiers non cachés, la ou tar avec . compresse tout les fichiers, ceux cachés compris. C'est d'illeurs logique, le . étant synonyme de dossier caché...
+
+**2)** On se penche ensuite sur la commande ``tar cvf archive.tar * .*``
+
+Cette commande pose problème, car elle archive l'ensemble de notre home.
+
+**3)** On finit en créant un dossier test, contenant 3 fichiers, puis on se retire les doits en execution. On tente alors d'effectuer une archive de ce dossier, mais on n'a pas la permission de la faire. 
+
+En effet, le script d'archivage s'exécute dans le fichier, mais n'a pas les droits pour le faire puisque nous nous sommes otés les droits d'exécution : On voit donc que pour compresser un dossier, il faut avoir les droits sur ledit dossier.
