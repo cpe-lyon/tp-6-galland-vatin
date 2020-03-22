@@ -395,6 +395,7 @@ Auparavant, on a tapé dans le terminal ``tty``, qui nous à donné l'identifian
 * * * * ./test.sh > /dev/tty1
 ```
 Ce script est donc appelé toutes les minutes dans le terminal.
+
 **3)** On souhaite maintenant afficher un message à intervalle régulier, en l'occurrence toutes les 3 minutes :
 
 Aprés avoir créé le script contenant la tache à executé, on rentre dans cron la commande :
