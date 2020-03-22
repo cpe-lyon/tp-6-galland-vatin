@@ -328,16 +328,121 @@ sudo insmod /lib/modules/5.3.0-42-generic/kernek/drivers/misc/hello.ko
 lsmod | grep "hello" #Montre que le module à bien été lancé
 ```
 
+Pour vérifier que la phrase "La fonction init_module() est appelée" est bien inscrite dans le journal du noyau, on effectue la commande :
+
+```bash
+cat /var/log/kern.log | grep "init_module"
+```
+
+Et on trouve bien la ligne désirée.
+
+**6)** Non traitée
+
+**7)** On décharge ensuite le module : 
+
+```
+sudo rmmod /lib/modules/5.3.0-42-generic/kernel/drivers/misc/hello.ko
+```
+
+Puis en cherchant dans le journal du noyeau on trouve la phrase "La fonction cleanup_module() est appelée", preuve du bon déchargement du module.
+
+**8)** Non traitée
+
+## Exercice 4 : Exécution de commandes en différé : at et cron
+
+**1)** On souhaite programmer une tâche affichant un rappel pour une réunion dans 3 minutes :
+
+```bash
+at 2.41 PM 
+
+touch /home/usr1/test
+
+ctrl + D
+```
+
+On crée ainsi le fichier test dans le dossier de l'utilisateur usr1.
+
+Rien ne sert d'utiliser echo, car on éxécute via /bin/sh, et non via l'interface utilisateur...
+
+On va donc creer un script en sh, contenant juste une ligne : ``echo "rappel"``.
+
+Ensuite on fait chmod 777, et on teste l'execution en executant le fichier.
+
+Cela étant fait, on ouvre ``crontab -e``, puis avec 2 on spécifie le choix de vim.
+
+Une dernière
+
+
 
 
 // A rédiger //
 
-on recherche aussi dans le journal du noyau avec :
 
-cat /var/log/kern.log | grep "init_module". On trouve la ligne demandée.
+ex 4
 
-on décharge le module avec : 
 
-sudo rmmod /lib/modules/5.3.0-42-generic/kernel/drivers/misc/hello.ko
 
-la ligne apparait correctement dans les journaux du kernel.
+
+
+http://hardware-libre.fr/2014/03/8-exemples-pour-maitriser-linux-cron/
+https://www.linuxtricks.fr/wiki/cron-et-crontab-le-planificateur-de-taches
+
+problème : comment renvoyer sur le terminal actuel ?
+on a tapé avant tty qui nous donne le terminal actuel et on mets cette valeur dans le programme
+on fait * * * * ./test.sh > /dev/tty1
+
+tache toutes les 3mins ?
+*/3 * * * ./tache.sh > /dev/tty
+
+tache tous les 15 mins ?
+
+*/15 * * * ./tache2.sh
+
+taches q5
+
+2/5 18 1,15 * ./tache3.sh > /dev/tty
+
+tache q6
+
+pour ne plus envoyer par mail on ajoute en première ligne : 
+MAILTO=""
+
+00 17 1-5 * ./tache4.sh > /dev/tty
+
+chrontab -r supprime les rappels pour toi, sinon chrontab -r usr supprime pour autre usr, mais nescessite root.
+
+Ex5 htop : tous les programmes en cours en temps réel
+On passe a tty2 avec ctrl alt F2.
+W renvoit les programmes actifs lancés par l'utilisateur.
+au login, la dernière connexion apparait
+sinon, on peut utiliser le log de connexion :
+less /var/log/auth.log
+
+uname -r pour plusieurs infos, uname -r pour juste le noyau
+
+sudo lshw -C CPU -json
+
+journalctl --list-boots pour afficher les derniers demarages
+pour afficher après le boot, on utilise journalctl en root avec --until et --since. en donnant les dates entre deux boots. sinon, on peut utiliser --boot[=ID] donc par exemple journalctl --boot -0 pour le dernier, -1 pour l'avant dernier etc.
+
+pour les derniers démarages, on peut faire : journalctl --list-boot | tail -n 5 pour les 5 derniers
+
+pour prevenir d'une maintenance, la meilleure solution est de l'écrire directement dans
+/etc/motd
+
+sinon dans le /etc/profile
+echo "attention, maintenance de prévue le ..."
+
+Tload montre l'activité du processeur,donc on devrait voir une grande utilisation puis plus rien quand on interrompt !
+
+ex6 pas fait
+
+
+ex7
+
+tar * compresse que les fichiers non cachés.
+tar . compresse tout le dossier actuel, donc fichiers cachés compris
+
+la commande archive tout notre home ?
+
+en s'enlevant les droits en exectution, on a permission denied.En effet, il s'execute dans le dossier, hors il n'a pas les droits ! Il faut donc les droits d'execution sur un dossier pour le compresser.
